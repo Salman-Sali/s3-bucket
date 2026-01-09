@@ -1,13 +1,3 @@
-# s3-bucket
-This is a work in progress project.
-
-
-```toml
-[dependencies]
-s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.1.0" }
-```
-
-```rust 
 use s3_bucket::{JsonItem, S3BucketItem, S3Context};
 
 async fn test() {
@@ -44,4 +34,3 @@ impl PostComments {
         }
     }
 }
-```

@@ -1,0 +1,19 @@
+[package]
+name = "s3-bucket"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aws-sdk-s3 = "1.104.0"
+bytes = "1.10.1"
+s3-bucket-derive = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.143"
+thiserror = "2.0.16"
+
+[workspace]
+members = ["examples/json-example","s3-bucket-derive"]
+
+[workspace.dependencies]
+s3-bucket = { path = "." }
+s3-bucket-derive = { path = "s3-bucket-derive" }
