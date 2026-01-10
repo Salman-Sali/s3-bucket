@@ -17,11 +17,11 @@ pub fn generate_byte_stream_conversion_for_json_item(
             }
         }
 
-        impl TryFrom<s3_bucket::bytes::Bytes> for #struct_name_expr {
+        impl TryFrom<s3_bucket::s3_object::S3Object> for #struct_name_expr {
             type Error = s3_bucket::error::Error;
 
-            fn try_from(value: s3_bucket::bytes::Bytes) -> Result<Self, Self::Error> {
-                let string = str::from_utf8(&value)
+            fn try_from(value: s3_bucket::s3_object::S3Object) -> Result<Self, Self::Error> {
+                let string = str::from_utf8(&value.bytes)
                     .map_err(|_|  s3_bucket::error::Error::ByteArrayToString)?;
                 s3_bucket::serde_json::from_str(string)
                     .map_err(|_| s3_bucket::error::Error::TryFromByteError)

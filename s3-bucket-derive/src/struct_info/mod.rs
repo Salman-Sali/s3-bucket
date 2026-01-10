@@ -13,7 +13,7 @@ pub struct StructInfo {
 #[derive(Debug)]
 pub struct Key {
     pub value: String,
-    pub argument: Option<String>,
+    pub arguments: Vec<String>,
 }
 
 impl Key {
@@ -23,20 +23,22 @@ impl Key {
 
         let finds: Vec<_> = regex.find_iter(&value).collect();
 
-        let argument: Option<String> = match finds.len() {
-            0 => None,
-            1 => Some(finds[0].as_str().trim_start_matches("{").trim_end_matches("}").to_string()),
-            _ => panic!("Key currently only support 1 argument or none.")
-        };
-        
-        Self { 
-            value, 
-            argument
+        let mut arguments = vec![];
+
+        for find in finds {
+            arguments.push(
+                find.as_str()
+                    .trim_start_matches("{")
+                    .trim_end_matches("}")
+                    .to_string(),
+            )
         }
+
+        Self { value, arguments }
     }
 
     pub fn is_static_key(&self) -> bool {
-        self.argument.is_none()
+        self.arguments.len() == 0
     }
 }
 
@@ -50,14 +52,14 @@ impl StructInfo {
             fields: vec![],
         }
     }
-    
+
     pub fn perform_checks(&self) {
         let Some(key) = &self.key else {
             return;
         };
 
-        if let Some(argument)  = &key.argument {
-            if !self.field_exists(&argument) {
+        for argument in &key.arguments {
+            if !self.field_exists(argument) {
                 panic!("Field {argument} provided in the key does not exists.");
             }
         }

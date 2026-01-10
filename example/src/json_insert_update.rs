@@ -1,6 +1,8 @@
 use s3_bucket::{JsonItem, S3BucketItem, S3Context};
 
-async fn test() {
+#[allow(dead_code)]
+async fn json_insert_update() {
+    #[allow(deprecated)]
     let config = aws_config::from_env().load().await;
     let s3_client = aws_sdk_s3::Client::new(&config);
     let s3_context = S3Context::new(s3_client);
@@ -8,8 +10,8 @@ async fn test() {
     let post_id = String::from("123");
 
     let _ = s3_context.put(PostComments::new(post_id.clone())).await;
-    let post_comments = s3_context
-        .get_with_partial_key::<PostComments>(post_id)
+    let _ = s3_context
+        .get_with_partial_keys::<PostComments>(vec![Box::new(post_id)])
         .await;
 }
 

@@ -12,12 +12,18 @@ pub fn generate_key_buidler(struct_info: &StructInfo) -> proc_macro2::TokenStrea
         return quote! {};
     }
 
-    let value = key.value.replace(&format!("{{{}}}", key.argument.as_ref().unwrap()), "{value}");
+    let mut key_string = key.value.clone();
+    for argument in &key.arguments {
+        key_string = key_string.replace(&format!("{{{}}}", argument), "{}");
+    }
 
     quote! {
         impl s3_bucket::traits::key_builder::KeyBuilder for #struct_name_expr {
-            fn build_key(value: &String) -> String {
-                format!(#value)
+            fn build_key(arguments: Vec<Box<dyn std::fmt::Display>>) -> String {
+                let mut key_string = String::from(#key_string);
+                arguments
+                    .iter()
+                    .fold(key_string, |acc, v| acc.replacen("{}", &v.to_string(), 1))
             }
         }
     }

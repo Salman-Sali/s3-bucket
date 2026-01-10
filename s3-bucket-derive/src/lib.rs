@@ -1,10 +1,14 @@
 #![deny(unused_crate_dependencies)]
 
-use generators::{has_bucket_name::generate_has_bucket_name_tokens, has_content_type::generate_has_content_type, has_key::generate_has_key_token, json_item::generate_byte_stream_conversion_for_json_item, key_builder::generate_key_buidler};
+use generators::{
+    has_bucket_name::generate_has_bucket_name_tokens, has_content_type::generate_has_content_type,
+    has_key::generate_has_key_token, json_item::generate_byte_stream_conversion_for_json_item,
+    key_builder::generate_key_buidler,
+};
 use proc_macro::TokenStream;
 use quote::quote;
 use struct_info::StructInfo;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 mod generators;
 mod struct_info;
@@ -25,7 +29,8 @@ pub fn s3_bucket_derive(input: TokenStream) -> TokenStream {
         #has_content_type_token
         #has_key_token
         #key_builder_token
-    }.into()
+    }
+    .into()
 }
 
 #[proc_macro_derive(JsonItem)]

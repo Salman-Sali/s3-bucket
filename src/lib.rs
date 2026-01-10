@@ -8,3 +8,4 @@ pub use s3_bucket_derive::JsonItem;
 pub use s3_bucket_derive::S3BucketItem;
 pub use s3_context::S3Context;
 pub use serde_json;
+pub mod s3_object;

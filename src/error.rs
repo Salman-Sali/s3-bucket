@@ -1,4 +1,11 @@
-use aws_sdk_s3::{config::http::HttpResponse, error::SdkError, operation::{delete_object::DeleteObjectError, get_object::GetObjectError, put_object::PutObjectError}};
+use aws_sdk_s3::{
+    config::http::HttpResponse,
+    error::SdkError,
+    operation::{
+        delete_object::DeleteObjectError, get_object::GetObjectError, put_object::PutObjectError,
+    },
+    presigning::PresigningConfigError,
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -18,5 +25,9 @@ pub enum Error {
     #[error("Error while converting byte array to string.")]
     ByteArrayToString,
     #[error("Error while collecting bytes from ByteStream.")]
-    ByteStreamCollectionError
+    ByteStreamCollectionError,
+    #[error("Error while generating presigning config.")]
+    PresigningConfigError(PresigningConfigError),
+    #[error("{0}")]
+    Other(String)
 }

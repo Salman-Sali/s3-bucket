@@ -1,9 +1,10 @@
-use aws_sdk_s3::{error::SdkError, primitives::ByteStream, Client};
+use std::time::Duration;
+
+use aws_sdk_s3::{Client, error::SdkError, presigning::PresigningConfig, primitives::ByteStream};
 use bytes::Bytes;
 
 use crate::{
-    error::Error,
-    traits::{has_content_type::HasContentType, has_key::HasKey, key_builder::KeyBuilder},
+    error::Error, s3_object::S3Object, traits::{has_content_type::HasContentType, has_key::HasKey, key_builder::KeyBuilder}
 };
 
 pub struct S3Bucket<'a> {
@@ -38,17 +39,17 @@ impl<'a> S3Bucket<'a> {
         return Ok(());
     }
 
-    pub async fn get_with_partial_key<
-        T: KeyBuilder + TryFrom<Bytes, Error = impl std::fmt::Debug>,
+    pub async fn get_with_partial_keys<
+        T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug>,
     >(
         &self,
-        partial_key: String,
+        partial_keys: Vec<Box<dyn std::fmt::Display>>,
     ) -> Result<T, Error> {
-        let key = T::build_key(&partial_key);
+        let key = T::build_key(partial_keys);
         self.get(key).await
     }
 
-    pub async fn get<T: TryFrom<Bytes, Error = impl std::fmt::Debug>>(
+    pub async fn get<T: TryFrom<S3Object, Error = impl std::fmt::Debug>>(
         &self,
         key: String,
     ) -> Result<T, Error> {
@@ -56,7 +57,7 @@ impl<'a> S3Bucket<'a> {
             .client
             .get_object()
             .bucket(&self.bucket_name)
-            .key(key)
+            .key(&key)
             .send()
             .await
             .map_err(|e| Error::GetError(e))?;
@@ -68,23 +69,25 @@ impl<'a> S3Bucket<'a> {
             .map_err(|_| Error::ByteStreamCollectionError)?
             .into_bytes();
 
-        T::try_from(bytes).map_err(|e| {
+        let object = S3Object::new(bytes, key);
+
+        T::try_from(object).map_err(|e| {
             eprintln!("{:?}", e);
             Error::TryFromByteError
         })
     }
 
-    pub async fn get_maybe_with_partial_key<
-        T: KeyBuilder + TryFrom<Bytes, Error = impl std::fmt::Debug>,
+    pub async fn get_maybe_with_partial_keys<
+        T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug>,
     >(
         &self,
-        partial_key: String,
+        partial_keys: Vec<Box<dyn std::fmt::Display>>,
     ) -> Result<Option<T>, Error> {
-        let key = T::build_key(&partial_key);
+        let key = T::build_key(partial_keys);
         self.get_maybe(key).await
     }
 
-    pub async fn get_maybe<T: TryFrom<Bytes, Error = impl std::fmt::Debug>>(
+    pub async fn get_maybe<T: TryFrom<S3Object, Error = impl std::fmt::Debug>>(
         &self,
         key: String,
     ) -> Result<Option<T>, Error> {
@@ -92,7 +95,7 @@ impl<'a> S3Bucket<'a> {
             .client
             .get_object()
             .bucket(&self.bucket_name)
-            .key(key)
+            .key(&key)
             .send()
             .await;
 
@@ -100,15 +103,17 @@ impl<'a> S3Bucket<'a> {
             Ok(x) => x,
             Err(e) => {
                 match e {
-                    SdkError::ServiceError(e) => if e.err().is_no_such_key() {
-                        return Ok(None)
+                    SdkError::ServiceError(e) => {
+                        if e.err().is_no_such_key() {
+                            return Ok(None);
+                        }
                     }
                     e => {
                         return Err(Error::GetError(e));
-                    },
+                    }
                 }
                 todo!()
-            },
+            }
         };
 
         let bytes = result
@@ -118,17 +123,21 @@ impl<'a> S3Bucket<'a> {
             .map_err(|_| Error::ByteStreamCollectionError)?
             .into_bytes();
 
-        T::try_from(bytes).map_err(|e| {
-            eprintln!("{:?}", e);
-            Error::TryFromByteError
-        }).map(|x| Some(x))
+        let s3_object = S3Object::new(bytes, key);
+
+        T::try_from(s3_object)
+            .map_err(|e| {
+                eprintln!("{:?}", e);
+                Error::TryFromByteError
+            })
+            .map(|x| Some(x))
     }
 
-    pub async fn delete_with_partial_key<T: KeyBuilder>(
+    pub async fn delete_with_partial_keys<T: KeyBuilder>(
         &self,
-        partial_key: String,
+        partial_keys: Vec<Box<dyn std::fmt::Display>>,
     ) -> Result<(), Error> {
-        let key = T::build_key(&partial_key);
+        let key = T::build_key(partial_keys);
         self.delete(key).await
     }
 
@@ -141,5 +150,24 @@ impl<'a> S3Bucket<'a> {
             .await
             .map(|_| ())
             .map_err(|e| Error::DeleteError(e))
+    }
+
+    pub async fn generate_presigned_url(
+        &self,
+        key: String,
+        lifetime_duration: Duration,
+    ) -> Result<String, Error> {
+        let result = self
+            .client
+            .get_object()
+            .bucket(&self.bucket_name)
+            .key(key)
+            .presigned(
+                PresigningConfig::expires_in(lifetime_duration)
+                    .map_err(|e| Error::PresigningConfigError(e))?,
+            )
+            .await
+            .map_err(|e| Error::GetError(e))?;
+        Ok(result.uri().to_string())
     }
 }

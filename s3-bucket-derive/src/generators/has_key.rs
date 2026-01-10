@@ -1,4 +1,4 @@
-use quote::quote;
+use quote::{ToTokens, quote};
 
 use crate::{struct_info::StructInfo, utils::as_expr::AsExpr};
 
@@ -8,16 +8,26 @@ pub fn generate_has_key_token(struct_info: &StructInfo) -> proc_macro2::TokenStr
     let Some(key) = &struct_info.key else {
         return quote! {};
     };
-
     let key_value = &key.value;
-    let key_token = if let Some(argument) = &key.argument {
-        let argument_expr = argument.as_expr();
-        quote! {
-            let #argument_expr = &self.#argument_expr;
-            #struct_name_expr::build_key(#argument_expr)
-        }
-    } else {
+    let key_token = if key.is_static_key() {
         quote! {String::from(#key_value)}
+    } else {
+        let mut build_key_expr = quote! {
+            let mut arguments: Vec<Box<dyn std::fmt::Display>> = vec![];
+        };
+
+        for argument in &key.arguments {
+            let argument_expr = argument.as_expr();
+            quote! {
+                arguments.push(Box::new(self.#argument_expr.clone()));
+            }
+            .to_tokens(&mut build_key_expr);
+        }
+        quote! {
+            #struct_name_expr::build_key(arguments)
+        }
+        .to_tokens(&mut build_key_expr);
+        build_key_expr
     };
 
     quote! {
