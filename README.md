@@ -4,7 +4,7 @@ This is a work in progress project.
 
 ```toml
 [dependencies]
-s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.2.0" }
+s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.2.1" }
 ```
 
 Below example is for a build release. Refer `example/src/json_insert_update.rs` for json example.
