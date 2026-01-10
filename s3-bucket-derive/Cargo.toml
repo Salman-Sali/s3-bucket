@@ -4,9 +4,8 @@ version = "0.2.1"
 edition = "2024"
 description = "A rust wrapper around aws-sdk-s3"
 repository = "https://github.com/Salman-Sali/s3-bucket"
-readme = "README.md"
 license = "MIT"
-keywords = ["aws", "s3 bucket"]
+keywords = ["aws", "s3-bucket"]
 
 [lib]
 proc-macro = true

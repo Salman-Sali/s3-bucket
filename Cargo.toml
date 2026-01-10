@@ -6,12 +6,12 @@ description = "A rust wrapper around aws-sdk-s3"
 repository = "https://github.com/Salman-Sali/s3-bucket"
 readme = "README.md"
 license = "MIT"
-keywords = ["aws", "s3 bucket"]
+keywords = ["aws", "s3-bucket"]
 
 [dependencies]
 aws-sdk-s3 = "1.104.0"
 bytes = "1.10.1"
-s3-bucket-derive = { workspace = true }
+s3-bucket-derive = { version = "0.2.1" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.143"
 thiserror = "2.0.16"
