@@ -1,19 +1,15 @@
-# s3-bucket
-This is a work in progress project.
+#![allow(unused)]
+#![allow(dead_code)]
 
-
-```toml
-[dependencies]
-s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.2.1" }
-```
-
-Below example is for a build release. Refer `examples/file_and_json/src/json_insert_update.rs` for json example.
-
-```rust 
+use aws_config::{meta::region::RegionProviderChain, Region};
 use s3_bucket::{traits::has_key::HasKey, S3BucketItem, S3Context};
 use strum::{Display, EnumString};
 
-pub async fn test(s3_context: S3Context) {
+pub async fn test() {    
+    let config = aws_config::from_env().load().await;
+    let s3_client = aws_sdk_s3::Client::new(&config);
+    let s3_context = S3Context::new(s3_client);
+
     let new_build = MyAppBuild {
         target_os: TargetOs::Windows,
         target_arch: TargetArch::X86_64,
@@ -26,7 +22,7 @@ pub async fn test(s3_context: S3Context) {
     let my_build = s3_context.get::<MyAppBuild>(key).await;
 }
 
-#[derive(Clone, S3BucketItem)]
+#[derive(S3BucketItem, Clone, Debug)]
 #[s3_item_prop(bucket = get_bucket_name())]
 #[s3_item_prop(key = "my-app-builds/{target_os}/{target_arch}/{version}/{name}")]
 #[s3_item_prop(content_type = "application/octet-stream")]
@@ -38,26 +34,26 @@ pub struct MyAppBuild {
     pub file: File,
 }
 
-#[derive(Display, EnumString, Clone)]
+#[derive(Display, EnumString, Clone, Debug)]
 pub enum TargetOs {
     Windows,    
     Linux,
 }
 
-#[derive(Display, EnumString, Clone)]
+#[derive(Display, EnumString, Clone, Debug)]
 pub enum TargetArch {
     X86_64,
     ARM64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum File {
     FilePath(String),
     FileContent(s3_bucket::bytes::Bytes),
 }
 
 pub fn get_bucket_name() -> String {
-    String::from("MyBucket")
+    String::from("myBucketName")
 }
 
 impl TryInto<s3_bucket::bytes::Bytes> for MyAppBuild {
@@ -115,5 +111,3 @@ impl TryFrom<s3_bucket::s3_object::S3Object> for MyAppBuild {
         })
     }
 }
-
-```
