@@ -13,7 +13,7 @@ pub fn generate_has_key_token(struct_info: &StructInfo) -> proc_macro2::TokenStr
         quote! {String::from(#key_value)}
     } else {
         let mut build_key_expr = quote! {
-            let mut arguments: Vec<Box<dyn std::fmt::Display>> = vec![];
+            let mut arguments: Vec<Box<dyn std::fmt::Display + Send>> = vec![];
         };
 
         for argument in &key.arguments {

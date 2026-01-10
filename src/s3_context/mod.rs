@@ -38,7 +38,7 @@ impl S3Context {
         T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug> + HasBucketName,
     >(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<T, Error> {
         self.with_bucket(T::get_bucket_name())
             .get_with_partial_keys(partial_keys)
@@ -56,7 +56,7 @@ impl S3Context {
         T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug> + HasBucketName,
     >(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<Option<T>, Error> {
         self.with_bucket(T::get_bucket_name())
             .get_maybe_with_partial_keys(partial_keys)
@@ -72,7 +72,7 @@ impl S3Context {
 
     pub async fn delete_with_partial_keys<T: KeyBuilder + HasBucketName>(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<(), Error> {
         self.with_bucket(T::get_bucket_name())
             .delete_with_partial_keys::<T>(partial_keys)

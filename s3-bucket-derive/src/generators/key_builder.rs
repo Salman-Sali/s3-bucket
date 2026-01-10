@@ -19,7 +19,7 @@ pub fn generate_key_buidler(struct_info: &StructInfo) -> proc_macro2::TokenStrea
 
     quote! {
         impl s3_bucket::traits::key_builder::KeyBuilder for #struct_name_expr {
-            fn build_key(arguments: Vec<Box<dyn std::fmt::Display>>) -> String {
+            fn build_key(arguments: Vec<Box<dyn std::fmt::Display + Send>>) -> String {
                 let mut key_string = String::from(#key_string);
                 arguments
                     .iter()

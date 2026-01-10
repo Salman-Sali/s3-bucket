@@ -43,7 +43,7 @@ impl<'a> S3Bucket<'a> {
         T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug>,
     >(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<T, Error> {
         let key = T::build_key(partial_keys);
         self.get(key).await
@@ -81,7 +81,7 @@ impl<'a> S3Bucket<'a> {
         T: KeyBuilder + TryFrom<S3Object, Error = impl std::fmt::Debug>,
     >(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<Option<T>, Error> {
         let key = T::build_key(partial_keys);
         self.get_maybe(key).await
@@ -135,7 +135,7 @@ impl<'a> S3Bucket<'a> {
 
     pub async fn delete_with_partial_keys<T: KeyBuilder>(
         &self,
-        partial_keys: Vec<Box<dyn std::fmt::Display>>,
+        partial_keys: Vec<Box<dyn std::fmt::Display + Send>>,
     ) -> Result<(), Error> {
         let key = T::build_key(partial_keys);
         self.delete(key).await
