@@ -1523,11 +1523,11 @@ checksum = "a50f4cf475b65d88e057964e0e9bb1f0aa9bbb2036dc65c64596b42932536984"
 
 [[package]]
 name = "s3-bucket"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "aws-sdk-s3",
  "bytes",
- "s3-bucket-derive 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "s3-bucket-derive",
  "serde",
  "serde_json",
  "thiserror",
@@ -1535,19 +1535,7 @@ dependencies = [
 
 [[package]]
 name = "s3-bucket-derive"
-version = "0.2.1"
-dependencies = [
- "proc-macro2",
- "quote",
- "regex",
- "syn",
-]
-
-[[package]]
-name = "s3-bucket-derive"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a4731690e15d32c4c342f2fa5fe8f65980237a129a88d1dfa8321b96be2c337"
+version = "0.2.2"
 dependencies = [
  "proc-macro2",
  "quote",

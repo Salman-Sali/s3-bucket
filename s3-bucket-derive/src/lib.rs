@@ -10,6 +10,8 @@ use quote::quote;
 use struct_info::StructInfo;
 use syn::{DeriveInput, parse_macro_input};
 
+use crate::{generators::has_static_key, has_static_key::generate_has_static_key};
+
 mod generators;
 mod struct_info;
 mod utils;
@@ -23,12 +25,14 @@ pub fn s3_bucket_derive(input: TokenStream) -> TokenStream {
     let has_content_type_token = generate_has_content_type(&struct_info);
     let has_key_token = generate_has_key_token(&struct_info);
     let key_builder_token = generate_key_buidler(&struct_info);
+    let has_static_key = generate_has_static_key(&struct_info);
 
     quote! {
         #has_bucket_name_token
         #has_content_type_token
         #has_key_token
         #key_builder_token
+        #has_static_key
     }
     .into()
 }
