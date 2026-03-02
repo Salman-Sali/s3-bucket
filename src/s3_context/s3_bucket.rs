@@ -4,7 +4,9 @@ use aws_sdk_s3::{Client, error::SdkError, presigning::PresigningConfig, primitiv
 use bytes::Bytes;
 
 use crate::{
-    error::Error, s3_object::S3Object, traits::{has_content_type::HasContentType, has_key::HasKey, key_builder::KeyBuilder}
+    error::Error,
+    s3_object::S3Object,
+    traits::{has_content_type::HasContentType, has_key::HasKey, key_builder::KeyBuilder},
 };
 
 pub struct S3Bucket<'a> {
@@ -101,19 +103,14 @@ impl<'a> S3Bucket<'a> {
 
         let result = match result {
             Ok(x) => x,
-            Err(e) => {
-                match e {
-                    SdkError::ServiceError(e) => {
-                        if e.err().is_no_such_key() {
-                            return Ok(None);
-                        }
-                    }
-                    e => {
-                        return Err(Error::GetError(e));
-                    }
+            Err(e) => match e {
+                SdkError::ServiceError(e) if e.err().is_no_such_key() => {
+                    return Ok(None);
                 }
-                todo!()
-            }
+                e => {
+                    return Err(Error::GetError(e));
+                }
+            },
         };
 
         let bytes = result
