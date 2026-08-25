@@ -1,6 +1,7 @@
 pub mod error;
 pub mod traits;
 
+pub mod file_reference;
 mod s3_context;
 pub use aws_sdk_s3;
 pub use bytes;
