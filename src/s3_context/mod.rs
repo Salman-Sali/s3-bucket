@@ -5,10 +5,12 @@ use bytes::Bytes;
 use s3_bucket::S3Bucket;
 
 use crate::{
-    error::Error, s3_object::S3Object, traits::{
+    error::Error,
+    s3_object::S3Object,
+    traits::{
         has_bucket_name::HasBucketName, has_content_type::HasContentType, has_key::HasKey,
         key_builder::KeyBuilder,
-    }
+    },
 };
 
 pub mod s3_bucket;
@@ -32,6 +34,21 @@ impl S3Context {
         item: T,
     ) -> Result<(), Error> {
         self.with_bucket(T::get_bucket_name()).put(item).await
+    }
+
+    /// Like [`put`](Self::put), but sends `cache_control` instead of the item's own
+    /// `Cache-Control` (`None` sends none).
+    #[allow(clippy::result_large_err)]
+    pub async fn put_with_cache_control<
+        T: HasKey + TryInto<Bytes> + HasContentType + HasBucketName,
+    >(
+        &self,
+        item: T,
+        cache_control: Option<String>,
+    ) -> Result<(), Error> {
+        self.with_bucket(T::get_bucket_name())
+            .put_with_cache_control(item, cache_control)
+            .await
     }
 
     pub async fn get_with_partial_keys<

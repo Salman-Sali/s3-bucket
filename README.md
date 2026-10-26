@@ -4,8 +4,35 @@ This is a work in progress project.
 
 ```toml
 [dependencies]
-s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.2.1" }
+s3-bucket = { git = "https://github.com/Salman-Sali/s3-bucket.git", tag = "0.2.5" }
 ```
+
+Or from crates.io: `s3-bucket = "0.2.5"`.
+
+## Cache-Control
+
+`#[s3_item_prop(cache_control = "...")]` (needs `content_type`) sends a `Cache-Control` header
+with every `put`. `put_with_cache_control(item, Some(..))` overrides it for one upload, and
+`put_with_cache_control(item, None)` sends none.
+
+```rust
+#[derive(serde::Serialize, serde::Deserialize, Clone, S3BucketItem, JsonItem)]
+#[s3_item_prop(bucket = get_bucket_name())]
+#[s3_item_prop(key = "data/{tenant_id}/site.json")]
+#[s3_item_prop(content_type = "application/json")]
+#[s3_item_prop(cache_control = "max-age=60")]
+pub struct SiteSettings {
+    pub tenant_id: String,
+    pub name: String,
+}
+
+s3_context.put(settings.clone()).await?; // Cache-Control: max-age=60
+s3_context
+    .put_with_cache_control(settings, Some("no-cache".into()))
+    .await?; // Cache-Control: no-cache
+```
+
+## Example
 
 Below example is for a build release. Refer `examples/file_and_json/src/json_insert_update.rs` for json example.
 

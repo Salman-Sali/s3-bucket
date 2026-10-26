@@ -22,9 +22,23 @@ impl<'a> S3Bucket<'a> {
         }
     }
 
+    /// Uploads `item` with its content type and, if it has one, its `Cache-Control`
+    /// ([`HasContentType::get_cache_control`]).
     pub async fn put<T: HasKey + TryInto<Bytes> + HasContentType>(
         &self,
         item: T,
+    ) -> Result<(), Error> {
+        self.put_with_cache_control(item, T::get_cache_control())
+            .await
+    }
+
+    /// Like [`put`](Self::put), but sends `cache_control` instead of the item's own
+    /// `Cache-Control` (`None` sends none).
+    #[allow(clippy::result_large_err)]
+    pub async fn put_with_cache_control<T: HasKey + TryInto<Bytes> + HasContentType>(
+        &self,
+        item: T,
+        cache_control: Option<String>,
     ) -> Result<(), Error> {
         let key = item.get_key();
         let bytes: Bytes = item.try_into().map_err(|_| Error::TryIntoByteError)?;
@@ -34,11 +48,12 @@ impl<'a> S3Bucket<'a> {
             .key(key)
             .body(ByteStream::from(bytes))
             .content_type(T::get_content_type())
+            .set_cache_control(cache_control)
             .send()
             .await
-            .map_err(|e| Error::PutError(e))?;
+            .map_err(Error::PutError)?;
 
-        return Ok(());
+        Ok(())
     }
 
     pub async fn get_with_partial_keys<

@@ -7,6 +7,7 @@ pub struct StructInfo {
     pub bucket: Option<String>,
     pub key: Option<Key>,
     pub content_type: Option<String>,
+    pub cache_control: Option<String>,
     pub fields: Vec<FieldInfo>,
 }
 
@@ -49,11 +50,16 @@ impl StructInfo {
             bucket: None,
             key: None,
             content_type: None,
+            cache_control: None,
             fields: vec![],
         }
     }
 
     pub fn perform_checks(&self) {
+        if self.cache_control.is_some() && self.content_type.is_none() {
+            panic!("cache_control requires content_type in #[s3_item_prop(...)].");
+        }
+
         let Some(key) = &self.key else {
             return;
         };
@@ -71,6 +77,10 @@ impl StructInfo {
 
     pub fn set_content_type(&mut self, content_type: String) {
         self.content_type = Some(content_type.replace("\"", ""))
+    }
+
+    pub fn set_cache_control(&mut self, cache_control: String) {
+        self.cache_control = Some(cache_control.replace("\"", ""))
     }
 
     pub fn set_key(&mut self, key: String) {
@@ -122,6 +132,13 @@ impl From<DeriveInput> for StructInfo {
                         };
 
                         struct_info.set_content_type(value.to_string());
+                    }
+                    "cache_control" => {
+                        let Ok(value) = meta.value() else {
+                            panic!("Error while getting cache_control value for struct.");
+                        };
+
+                        struct_info.set_cache_control(value.to_string());
                     }
                     _ => {}
                 }

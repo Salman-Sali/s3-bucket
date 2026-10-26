@@ -13,6 +13,17 @@ async fn json_insert_update() {
     let _ = s3_context
         .get_with_partial_keys::<PostComments>(vec![Box::new(post_id)])
         .await;
+
+    // Sent with `Cache-Control: max-age=60` (from the attribute)...
+    let settings = SiteSettings {
+        tenant_id: String::from("tenant-1"),
+        name: String::from("My store"),
+    };
+    let _ = s3_context.put(settings.clone()).await;
+    // ...or with a different value for this one upload.
+    let _ = s3_context
+        .put_with_cache_control(settings, Some(String::from("no-cache")))
+        .await;
 }
 
 pub fn get_bucket_name() -> String {
@@ -35,4 +46,14 @@ impl PostComments {
             comments: vec![],
         }
     }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, S3BucketItem, JsonItem)]
+#[s3_item_prop(bucket = get_bucket_name())]
+#[s3_item_prop(key = "data/{tenant_id}/site.json")]
+#[s3_item_prop(content_type = "application/json")]
+#[s3_item_prop(cache_control = "max-age=60")]
+pub struct SiteSettings {
+    pub tenant_id: String,
+    pub name: String,
 }
